@@ -5,14 +5,13 @@ import { Radar, BookmarkCheck, Sparkles, AlertTriangle } from "lucide-react";
 import { SearchBar } from "@/components/SearchBar";
 import { VideoCard } from "@/components/VideoCard";
 import { FilterSidebar } from "@/components/FilterSidebar";
-import { WeightSliders } from "@/components/WeightSliders";
+import { SortBySelect } from "@/components/SortBySelect";
 import { SyllabusUpload } from "@/components/SyllabusUpload";
 import { ComparisonDrawer } from "@/components/ComparisonDrawer";
 import { Button } from "@/components/ui/button";
 import { mockVideos } from "@/lib/mockData";
-import { rankVideos, filterVideos } from "@/lib/ranking";
-import { DEFAULT_WEIGHTS } from "@/lib/types";
-import type { Filters, Weights } from "@/lib/types";
+import { sortVideos, filterVideos } from "@/lib/ranking";
+import type { Filters, SortOption } from "@/lib/types";
 
 export const Route = createFileRoute("/")({
   component: CourseRadarPage,
@@ -21,8 +20,8 @@ export const Route = createFileRoute("/")({
 function CourseRadarPage() {
   const [query, setQuery] = useState("");
   const [language, setLanguage] = useState("All");
-  const [filters, setFilters] = useState<Filters>({ duration: "all", minLikeRatio: 0 });
-  const [weights, setWeights] = useState<Weights>(DEFAULT_WEIGHTS);
+  const [filters, setFilters] = useState<Filters>({ duration: "all" });
+  const [sortBy, setSortBy] = useState<SortOption>("likes");
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
   const [showComparison, setShowComparison] = useState(false);
   const [syllabusTopics, setSyllabusTopics] = useState<string[]>([]);
@@ -37,8 +36,8 @@ function CourseRadarPage() {
   const rankedVideos = useMemo(() => {
     if (!hasSearched) return [];
     const filtered = filterVideos(mockVideos, filters);
-    return rankVideos(filtered, weights);
-  }, [hasSearched, filters, weights]);
+    return sortVideos(filtered, sortBy);
+  }, [hasSearched, filters, sortBy]);
 
   const toggleBookmark = useCallback((id: string) => {
     setBookmarkedIds((prev) => {
@@ -92,7 +91,7 @@ function CourseRadarPage() {
               hasTopics={hasSyllabus}
               onClear={() => setSyllabusTopics([])}
             />
-            <WeightSliders weights={weights} onWeightsChange={setWeights} />
+            <SortBySelect value={sortBy} onChange={setSortBy} />
             {bookmarkedIds.size > 0 && (
               <Button
                 onClick={() => setShowComparison(!showComparison)}

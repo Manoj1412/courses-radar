@@ -1,4 +1,4 @@
-import type { VideoResult, Weights } from "./types";
+import type { VideoResult, SortOption } from "./types";
 
 function normalize(value: number, min: number, max: number): number {
   if (max === min) return 0.5;
@@ -7,46 +7,36 @@ function normalize(value: number, min: number, max: number): number {
 
 function recencyScore(publishedAt: string): number {
   const daysSince = (Date.now() - new Date(publishedAt).getTime()) / (1000 * 60 * 60 * 24);
-  return Math.max(0, 1 - daysSince / 1095); // 3-year decay
+  return Math.max(0, 1 - daysSince / 1095);
 }
 
-export function rankVideos(videos: VideoResult[], weights: Weights): VideoResult[] {
+export function sortVideos(videos: VideoResult[], sortBy: SortOption): VideoResult[] {
   if (videos.length === 0) return [];
 
-  const maxViews = Math.max(...videos.map((v) => v.views));
-  const minViews = Math.min(...videos.map((v) => v.views));
-
-  return videos
-    .map((video) => {
-      const likeScore = normalize(video.likeRatio, 0, 8);
-      const sentScore = normalize(video.sentimentScore, 0, 100);
-      const viewScore = normalize(video.views, minViews, maxViews);
-      const recScore = recencyScore(video.publishedAt);
-
-      const total = weights.likeRatio + weights.sentiment + weights.views + weights.recency;
-      const overallScore = Math.round(
-        ((likeScore * weights.likeRatio +
-          sentScore * weights.sentiment +
-          viewScore * weights.views +
-          recScore * weights.recency) /
-          total) *
-          100
-      );
-
-      return { ...video, overallScore };
-    })
-    .sort((a, b) => b.overallScore - a.overallScore);
+  return [...videos].sort((a, b) => {
+    switch (sortBy) {
+      case "likes":
+        return b.likeRatio - a.likeRatio;
+      case "popularity":
+        return b.views - a.views;
+      case "positive-comments":
+        return b.sentimentScore - a.sentimentScore;
+      case "recent":
+        return new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime();
+      default:
+        return 0;
+    }
+  });
 }
 
 export function filterVideos(
   videos: VideoResult[],
-  filters: { duration: string; minLikeRatio: number }
+  filters: { duration: string }
 ): VideoResult[] {
   return videos.filter((v) => {
     if (filters.duration === "short" && v.durationSeconds > 5 * 3600) return false;
     if (filters.duration === "medium" && (v.durationSeconds < 5 * 3600 || v.durationSeconds > 15 * 3600)) return false;
     if (filters.duration === "long" && v.durationSeconds < 15 * 3600) return false;
-    if (v.likeRatio < filters.minLikeRatio) return false;
     return true;
   });
 }
