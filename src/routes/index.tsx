@@ -21,7 +21,7 @@ function CourseRadarPage() {
   const [query, setQuery] = useState("");
   const [language, setLanguage] = useState("All");
   const [filters, setFilters] = useState<Filters>({ duration: "all" });
-  const [sortBy, setSortBy] = useState<SortOption>("likes");
+  const [sortBy, setSortBy] = useState<SortOption>("popularity");
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
   const [showComparison, setShowComparison] = useState(false);
   const [syllabusTopics, setSyllabusTopics] = useState<string[]>([]);
