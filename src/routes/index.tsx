@@ -261,7 +261,7 @@ function CourseRadarPage() {
         videos={bookmarkedVideos}
         isOpen={showComparison}
         onClose={() => setShowComparison(false)}
-        onRemove={(id) => toggleBookmark(id)}
+        onRemove={toggleBookmark}
       />
     </div>
   );
