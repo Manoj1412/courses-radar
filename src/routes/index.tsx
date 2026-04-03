@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { Radar, BookmarkCheck, Sparkles, AlertTriangle } from "lucide-react";
+import { Radar, BookmarkCheck, Sparkles, AlertTriangle, Loader2 } from "lucide-react";
 import { SearchBar } from "@/components/SearchBar";
 import { VideoCard } from "@/components/VideoCard";
 import { FilterSidebar } from "@/components/FilterSidebar";
@@ -9,9 +9,9 @@ import { SortBySelect } from "@/components/SortBySelect";
 import { SyllabusUpload } from "@/components/SyllabusUpload";
 import { ComparisonDrawer } from "@/components/ComparisonDrawer";
 import { Button } from "@/components/ui/button";
-import { mockVideos } from "@/lib/mockData";
 import { sortVideos, filterVideos } from "@/lib/ranking";
-import type { Filters, SortOption } from "@/lib/types";
+import { searchYouTube } from "@/lib/youtube.functions";
+import type { VideoResult, Filters, SortOption } from "@/lib/types";
 
 export const Route = createFileRoute("/")({
   component: CourseRadarPage,
@@ -26,18 +26,31 @@ function CourseRadarPage() {
   const [showComparison, setShowComparison] = useState(false);
   const [syllabusTopics, setSyllabusTopics] = useState<string[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [videos, setVideos] = useState<VideoResult[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSearch = useCallback(() => {
-    if (query.trim()) {
-      setHasSearched(true);
+  const handleSearch = useCallback(async () => {
+    if (!query.trim()) return;
+    setHasSearched(true);
+    setIsLoading(true);
+    setError(null);
+    try {
+      const result = await searchYouTube({ data: { query: query.trim(), language } });
+      setVideos(result.videos);
+      if (result.error) setError(result.error);
+    } catch (err) {
+      setError("Failed to search. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
-  }, [query]);
+  }, [query, language]);
 
   const rankedVideos = useMemo(() => {
     if (!hasSearched) return [];
-    const filtered = filterVideos(mockVideos, filters);
+    const filtered = filterVideos(videos, filters);
     return sortVideos(filtered, sortBy);
-  }, [hasSearched, filters, sortBy]);
+  }, [hasSearched, videos, filters, sortBy]);
 
   const toggleBookmark = useCallback((id: string) => {
     setBookmarkedIds((prev) => {
@@ -52,8 +65,8 @@ function CourseRadarPage() {
   }, []);
 
   const bookmarkedVideos = useMemo(
-    () => mockVideos.filter((v) => bookmarkedIds.has(v.id)),
-    [bookmarkedIds]
+    () => videos.filter((v) => bookmarkedIds.has(v.id)),
+    [bookmarkedIds, videos]
   );
 
   const hasSyllabus = syllabusTopics.length > 0;
@@ -83,6 +96,7 @@ function CourseRadarPage() {
             language={language}
             onLanguageChange={setLanguage}
             onSearch={handleSearch}
+            isLoading={isLoading}
           />
 
           <div className="flex flex-wrap items-center gap-3 mt-3">
@@ -133,6 +147,15 @@ function CourseRadarPage() {
                   onClick={() => {
                     setQuery(suggestion);
                     setHasSearched(true);
+                    setIsLoading(true);
+                    setError(null);
+                    searchYouTube({ data: { query: suggestion, language } })
+                      .then((result) => {
+                        setVideos(result.videos);
+                        if (result.error) setError(result.error);
+                      })
+                      .catch(() => setError("Failed to search."))
+                      .finally(() => setIsLoading(false));
                   }}
                   className="px-4 py-2 rounded-full bg-secondary text-secondary-foreground text-sm hover:bg-primary/15 hover:text-primary transition-colors"
                 >
@@ -154,6 +177,13 @@ function CourseRadarPage() {
 
             {/* Results Grid */}
             <div className="flex-1">
+              {error && (
+                <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4" />
+                  {error}
+                </div>
+              )}
+
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm text-muted-foreground">
                   <span className="font-semibold text-foreground">{rankedVideos.length}</span> courses ranked
@@ -166,10 +196,15 @@ function CourseRadarPage() {
               {/* Mobile Filters Notice */}
               <div className="lg:hidden mb-4 flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 rounded-lg p-3">
                 <AlertTriangle className="h-3.5 w-3.5" />
-                Use desktop for filter sidebar. Weight sliders available above.
+                Use desktop for filter sidebar.
               </div>
 
-              {rankedVideos.length > 0 ? (
+              {isLoading ? (
+                <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary mb-3" />
+                  <p className="text-sm">Searching YouTube courses...</p>
+                </div>
+              ) : rankedVideos.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                   {rankedVideos.map((video, i) => (
                     <VideoCard
@@ -184,8 +219,8 @@ function CourseRadarPage() {
                 </div>
               ) : (
                 <div className="text-center py-20 text-muted-foreground">
-                  <p className="text-lg">No courses match your filters.</p>
-                  <p className="text-sm mt-1">Try adjusting duration or like ratio filters.</p>
+                  <p className="text-lg">No courses found.</p>
+                  <p className="text-sm mt-1">Try a different search term or adjust filters.</p>
                 </div>
               )}
             </div>
