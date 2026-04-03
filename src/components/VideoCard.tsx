@@ -14,6 +14,8 @@ interface VideoCardProps {
 }
 
 export function VideoCard({ video, rank, isBookmarked, onToggleBookmark, showSyllabusMatch }: VideoCardProps) {
+  const youtubeUrl = `https://www.youtube.com/watch?v=${video.id}`;
+
   return (
     <TooltipProvider>
       <motion.div
