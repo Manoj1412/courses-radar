@@ -37,14 +37,18 @@ function CourseRadarPage() {
     setError(null);
     try {
       const result = await searchYouTube({ data: { query: query.trim(), language } });
-      setVideos(result.videos);
+      // Apply syllabus matching if topics exist
+      const videosWithMatch = syllabusTopics.length > 0
+        ? applySyllabusMatch(result.videos, syllabusTopics)
+        : result.videos;
+      setVideos(videosWithMatch);
       if (result.error) setError(result.error);
     } catch (err) {
       setError("Failed to search. Please try again.");
     } finally {
       setIsLoading(false);
     }
-  }, [query, language]);
+  }, [query, language, syllabusTopics]);
 
   const rankedVideos = useMemo(() => {
     if (!hasSearched) return [];
