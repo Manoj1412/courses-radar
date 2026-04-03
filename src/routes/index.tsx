@@ -13,6 +13,17 @@ import { sortVideos, filterVideos } from "@/lib/ranking";
 import { searchYouTube } from "@/lib/youtube.functions";
 import type { VideoResult, Filters, SortOption } from "@/lib/types";
 
+function applySyllabusMatch(videos: VideoResult[], topics: string[]): VideoResult[] {
+  if (topics.length === 0) return videos;
+  const topicsLower = topics.map((t) => t.toLowerCase());
+  return videos.map((video) => {
+    const text = `${video.title} ${video.description} ${video.topicsDetected.join(" ")}`.toLowerCase();
+    const matched = topicsLower.filter((topic) => text.includes(topic));
+    const syllabusMatch = Math.round((matched.length / topics.length) * 100);
+    return { ...video, syllabusMatch };
+  });
+}
+
 export const Route = createFileRoute("/")({
   component: CourseRadarPage,
 });
@@ -37,14 +48,18 @@ function CourseRadarPage() {
     setError(null);
     try {
       const result = await searchYouTube({ data: { query: query.trim(), language } });
-      setVideos(result.videos);
+      // Apply syllabus matching if topics exist
+      const videosWithMatch = syllabusTopics.length > 0
+        ? applySyllabusMatch(result.videos, syllabusTopics)
+        : result.videos;
+      setVideos(videosWithMatch);
       if (result.error) setError(result.error);
     } catch (err) {
       setError("Failed to search. Please try again.");
     } finally {
       setIsLoading(false);
     }
-  }, [query, language]);
+  }, [query, language, syllabusTopics]);
 
   const rankedVideos = useMemo(() => {
     if (!hasSearched) return [];
@@ -101,9 +116,19 @@ function CourseRadarPage() {
 
           <div className="flex flex-wrap items-center gap-3 mt-3">
             <SyllabusUpload
-              onSyllabusSubmit={setSyllabusTopics}
+              onSyllabusSubmit={(topics) => {
+                setSyllabusTopics(topics);
+                // Re-apply matching to existing videos
+                if (videos.length > 0) {
+                  setVideos(applySyllabusMatch(videos, topics));
+                }
+              }}
               hasTopics={hasSyllabus}
-              onClear={() => setSyllabusTopics([])}
+              onClear={() => {
+                setSyllabusTopics([]);
+                // Reset match scores
+                setVideos((prev) => prev.map((v) => ({ ...v, syllabusMatch: 0 })));
+              }}
             />
             <SortBySelect value={sortBy} onChange={setSortBy} />
             {bookmarkedIds.size > 0 && (
@@ -151,7 +176,10 @@ function CourseRadarPage() {
                     setError(null);
                     searchYouTube({ data: { query: suggestion, language } })
                       .then((result) => {
-                        setVideos(result.videos);
+                        const vids = syllabusTopics.length > 0
+                          ? applySyllabusMatch(result.videos, syllabusTopics)
+                          : result.videos;
+                        setVideos(vids);
                         if (result.error) setError(result.error);
                       })
                       .catch(() => setError("Failed to search."))

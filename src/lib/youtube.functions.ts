@@ -25,9 +25,15 @@ export const searchYouTube = createServerFn({ method: "POST" })
       const relevanceLang = langMap[data.language] || "";
 
       // Step 1: Search for videos
+      // Build search query with language hint in query itself for better filtering
+      let searchQuery = data.query;
+      if (data.language !== "All" && data.language !== "English") {
+        searchQuery = `${data.query} ${data.language}`;
+      }
+
       const searchParams = new URLSearchParams({
         part: "snippet",
-        q: data.query,
+        q: searchQuery,
         type: "video",
         videoDuration: "long",
         maxResults: "15",
