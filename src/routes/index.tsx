@@ -105,9 +105,19 @@ function CourseRadarPage() {
 
           <div className="flex flex-wrap items-center gap-3 mt-3">
             <SyllabusUpload
-              onSyllabusSubmit={setSyllabusTopics}
+              onSyllabusSubmit={(topics) => {
+                setSyllabusTopics(topics);
+                // Re-apply matching to existing videos
+                if (videos.length > 0) {
+                  setVideos(applySyllabusMatch(videos, topics));
+                }
+              }}
               hasTopics={hasSyllabus}
-              onClear={() => setSyllabusTopics([])}
+              onClear={() => {
+                setSyllabusTopics([]);
+                // Reset match scores
+                setVideos((prev) => prev.map((v) => ({ ...v, syllabusMatch: 0 })));
+              }}
             />
             <SortBySelect value={sortBy} onChange={setSortBy} />
             {bookmarkedIds.size > 0 && (
