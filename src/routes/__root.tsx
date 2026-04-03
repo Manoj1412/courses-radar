@@ -37,10 +37,12 @@ export const Route = createRootRoute({
       { property: "og:title", content: "CourseRadar — Smart YouTube Course Finder" },
       { property: "og:description", content: "Find the best YouTube courses ranked by like ratio, comment sentiment, recency, and syllabus match." },
       { property: "og:type", content: "website" },
-      { property: "og:image", content: "https://lovable.dev/opengraph-image-p98pqg.png" },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/85356980-9457-48f3-adc7-6fa9d9cbae04/id-preview-ad97e124--fbdd6190-a65c-4f30-81b2-f8c052a66647.lovable.app-1775227253950.png" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
-      { name: "twitter:image", content: "https://lovable.dev/opengraph-image-p98pqg.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/85356980-9457-48f3-adc7-6fa9d9cbae04/id-preview-ad97e124--fbdd6190-a65c-4f30-81b2-f8c052a66647.lovable.app-1775227253950.png" },
+      { name: "twitter:title", content: "CourseRadar — Smart YouTube Course Finder" },
+      { name: "twitter:description", content: "Find the best YouTube courses ranked by like ratio, comment sentiment, recency, and syllabus match." },
     ],
     links: [
       {
