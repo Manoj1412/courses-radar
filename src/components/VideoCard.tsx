@@ -16,6 +16,11 @@ interface VideoCardProps {
 export function VideoCard({ video, rank, isBookmarked, onToggleBookmark, showSyllabusMatch }: VideoCardProps) {
   const youtubeUrl = `https://www.youtube.com/watch?v=${video.id}`;
 
+  const openVideo = (e: React.MouseEvent) => {
+    e.preventDefault();
+    window.open(youtubeUrl, "_blank", "noopener,noreferrer");
+  };
+
   return (
     <TooltipProvider>
       <motion.div
