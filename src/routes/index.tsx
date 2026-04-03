@@ -176,7 +176,10 @@ function CourseRadarPage() {
                     setError(null);
                     searchYouTube({ data: { query: suggestion, language } })
                       .then((result) => {
-                        setVideos(result.videos);
+                        const vids = syllabusTopics.length > 0
+                          ? applySyllabusMatch(result.videos, syllabusTopics)
+                          : result.videos;
+                        setVideos(vids);
                         if (result.error) setError(result.error);
                       })
                       .catch(() => setError("Failed to search."))
