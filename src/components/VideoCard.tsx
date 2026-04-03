@@ -16,6 +16,11 @@ interface VideoCardProps {
 export function VideoCard({ video, rank, isBookmarked, onToggleBookmark, showSyllabusMatch }: VideoCardProps) {
   const youtubeUrl = `https://www.youtube.com/watch?v=${video.id}`;
 
+  const openVideo = (e: React.MouseEvent) => {
+    e.preventDefault();
+    window.open(youtubeUrl, "_blank", "noopener,noreferrer");
+  };
+
   return (
     <TooltipProvider>
       <motion.div
@@ -25,7 +30,7 @@ export function VideoCard({ video, rank, isBookmarked, onToggleBookmark, showSyl
         className="card-glow rounded-xl overflow-hidden bg-card"
       >
         {/* Thumbnail */}
-        <a href={youtubeUrl} target="_blank" rel="noopener noreferrer" className="block relative aspect-video bg-muted group">
+        <a href={youtubeUrl} onClick={openVideo} target="_blank" rel="noopener noreferrer" className="block relative aspect-video bg-muted group">
           <img
             src={video.thumbnail}
             alt={video.title}
@@ -50,7 +55,7 @@ export function VideoCard({ video, rank, isBookmarked, onToggleBookmark, showSyl
         {/* Content */}
         <div className="p-4 space-y-3">
           {/* Title */}
-          <a href={youtubeUrl} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+          <a href={youtubeUrl} onClick={openVideo} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
             <h3 className="font-semibold text-sm leading-tight line-clamp-2 text-card-foreground">
               {video.title}
             </h3>
