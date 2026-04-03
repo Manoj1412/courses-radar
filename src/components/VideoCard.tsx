@@ -25,11 +25,11 @@ export function VideoCard({ video, rank, isBookmarked, onToggleBookmark, showSyl
         className="card-glow rounded-xl overflow-hidden bg-card"
       >
         {/* Thumbnail */}
-        <div className="relative aspect-video bg-muted">
+        <a href={youtubeUrl} target="_blank" rel="noopener noreferrer" className="block relative aspect-video bg-muted group">
           <img
             src={video.thumbnail}
             alt={video.title}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover group-hover:opacity-80 transition-opacity"
             loading="lazy"
           />
           {/* Rank badge */}
@@ -45,14 +45,16 @@ export function VideoCard({ video, rank, isBookmarked, onToggleBookmark, showSyl
               Series
             </div>
           )}
-        </div>
+        </a>
 
         {/* Content */}
         <div className="p-4 space-y-3">
           {/* Title */}
-          <h3 className="font-semibold text-sm leading-tight line-clamp-2 text-card-foreground">
-            {video.title}
-          </h3>
+          <a href={youtubeUrl} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+            <h3 className="font-semibold text-sm leading-tight line-clamp-2 text-card-foreground">
+              {video.title}
+            </h3>
+          </a>
 
           {/* Channel */}
           <div className="flex items-center gap-2 text-xs text-muted-foreground">

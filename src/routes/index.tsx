@@ -13,6 +13,17 @@ import { sortVideos, filterVideos } from "@/lib/ranking";
 import { searchYouTube } from "@/lib/youtube.functions";
 import type { VideoResult, Filters, SortOption } from "@/lib/types";
 
+function applySyllabusMatch(videos: VideoResult[], topics: string[]): VideoResult[] {
+  if (topics.length === 0) return videos;
+  const topicsLower = topics.map((t) => t.toLowerCase());
+  return videos.map((video) => {
+    const text = `${video.title} ${video.description} ${video.topicsDetected.join(" ")}`.toLowerCase();
+    const matched = topicsLower.filter((topic) => text.includes(topic));
+    const syllabusMatch = Math.round((matched.length / topics.length) * 100);
+    return { ...video, syllabusMatch };
+  });
+}
+
 export const Route = createFileRoute("/")({
   component: CourseRadarPage,
 });
