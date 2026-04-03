@@ -55,7 +55,7 @@ export function VideoCard({ video, rank, isBookmarked, onToggleBookmark, showSyl
         {/* Content */}
         <div className="p-4 space-y-3">
           {/* Title */}
-          <a href={youtubeUrl} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+          <a href={youtubeUrl} onClick={openVideo} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
             <h3 className="font-semibold text-sm leading-tight line-clamp-2 text-card-foreground">
               {video.title}
             </h3>
