@@ -30,7 +30,7 @@ export function VideoCard({ video, rank, isBookmarked, onToggleBookmark, showSyl
         className="card-glow rounded-xl overflow-hidden bg-card"
       >
         {/* Thumbnail */}
-        <a href={youtubeUrl} target="_blank" rel="noopener noreferrer" className="block relative aspect-video bg-muted group">
+        <a href={youtubeUrl} onClick={openVideo} target="_blank" rel="noopener noreferrer" className="block relative aspect-video bg-muted group">
           <img
             src={video.thumbnail}
             alt={video.title}
