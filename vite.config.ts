@@ -183,6 +183,9 @@ export default defineConfig(({ command, mode }) => {
       },
       dedupe: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "@tanstack/react-query", "@tanstack/query-core"],
     },
+    build: {
+      outDir: 'dist',
+    },
     plugins: [
       tailwindcss(),
       tsConfigPaths({
@@ -190,7 +193,7 @@ export default defineConfig(({ command, mode }) => {
       }),
       devClientErrorLogger(),
       devServerFnErrorLogger(),
-      ...(useCloudflare ? [cloudflare({ viteEnvironment: { name: "ssr" } })] : []),
+[],
       tanstackStart(),
       viteReact(),
       mode === "development" && componentTagger(),
