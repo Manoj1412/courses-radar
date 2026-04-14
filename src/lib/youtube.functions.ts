@@ -1,13 +1,15 @@
-import { createServerFn } from "@tanstack/react-start";
-import { z } from "zod";
-import type { VideoResult } from "./types";
+
+
+import { createServerFn } from '@tanstack/react-start';
+import { z } from 'zod';
+import type { VideoResult } from '@/lib/types';
 
 const searchInputSchema = z.object({
   query: z.string().min(1),
   language: z.string().default("All"),
 });
 
-export const searchYouTube = createServerFn({ method: "POST" })
+export const searchYouTubeVideosFn = createServerFn()
   .inputValidator((input: unknown) => searchInputSchema.parse(input))
   .handler(async ({ data }): Promise<{ videos: VideoResult[]; error: string | null }> => {
     const apiKey = process.env.YOUTUBE_API_KEY;
@@ -57,6 +59,8 @@ export const searchYouTube = createServerFn({ method: "POST" })
       }
 
       const searchData = await searchRes.json();
+
+
       const videoIds: string[] = searchData.items?.map(
         (item: any) => item.id.videoId
       ) || [];

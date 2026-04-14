@@ -20,6 +20,12 @@ export interface VideoResult {
   topicsDetected: string[];
 }
 
+export interface SearchResult {
+  videos: VideoResult[];
+  totalCount: number;
+  error?: string | null;
+}
+
 export interface Filters {
   duration: "all" | "short" | "medium" | "long";
 }

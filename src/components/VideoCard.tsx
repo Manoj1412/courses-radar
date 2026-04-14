@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import type { VideoResult } from "@/lib/types";
 import { formatViews, getScoreColor } from "@/lib/ranking";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 
 interface VideoCardProps {
@@ -10,15 +11,20 @@ interface VideoCardProps {
   rank: number;
   isBookmarked: boolean;
   onToggleBookmark: (id: string) => void;
+  onPlay?: (id: string) => void;
   showSyllabusMatch: boolean;
 }
 
-export function VideoCard({ video, rank, isBookmarked, onToggleBookmark, showSyllabusMatch }: VideoCardProps) {
+export function VideoCard({ video, rank, isBookmarked, onToggleBookmark, onPlay, showSyllabusMatch }: VideoCardProps) {
   const youtubeUrl = `https://www.youtube.com/watch?v=${video.id}`;
 
   const openVideo = (e: React.MouseEvent) => {
     e.preventDefault();
     window.open(youtubeUrl, "_blank", "noopener,noreferrer");
+  };
+
+  const handlePlay = () => {
+    onPlay?.(video.id);
   };
 
   return (
@@ -148,25 +154,36 @@ export function VideoCard({ video, rank, isBookmarked, onToggleBookmark, showSyl
             </div>
           )}
 
+
           {/* Footer: Score + Bookmark */}
-          <div className="flex items-center justify-between pt-2 border-t border-border">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-2 border-t border-border gap-2">
+            <div className="flex items-center gap-2 flex-1">
               <span className="text-xs text-muted-foreground">Score</span>
               <span className={`score-badge ${video.overallScore >= 80 ? "" : video.overallScore >= 60 ? "!bg-score-medium" : "!bg-score-low"}`}>
                 {video.overallScore}
               </span>
             </div>
-            <button
-              onClick={() => onToggleBookmark(video.id)}
-              className="p-1.5 rounded-lg hover:bg-muted transition-colors"
-              aria-label={isBookmarked ? "Remove bookmark" : "Add bookmark"}
-            >
-              {isBookmarked ? (
-                <BookmarkCheck className="h-5 w-5 text-primary" />
-              ) : (
-                <Bookmark className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors" />
-              )}
-            </button>
+            <div className="flex gap-2">
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={handlePlay}
+                className="text-xs h-8 px-3 flex-1"
+              >
+                Watch with AI
+              </Button>
+              <button
+                onClick={() => onToggleBookmark(video.id)}
+                className="p-1.5 rounded-lg hover:bg-muted transition-colors"
+                aria-label={isBookmarked ? "Remove bookmark" : "Add bookmark"}
+              >
+                {isBookmarked ? (
+                  <BookmarkCheck className="h-5 w-5 text-primary" />
+                ) : (
+                  <Bookmark className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors" />
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </motion.div>

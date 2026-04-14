@@ -10,8 +10,9 @@ import { SyllabusUpload } from "@/components/SyllabusUpload";
 import { ComparisonDrawer } from "@/components/ComparisonDrawer";
 import { Button } from "@/components/ui/button";
 import { sortVideos, filterVideos } from "@/lib/ranking";
-import { searchYouTube } from "@/lib/youtube.functions";
-import type { VideoResult, Filters, SortOption } from "@/lib/types";
+import { searchYouTubeVideosFn } from "@/lib/youtube.functions";
+import type { VideoResult, SearchResult, Filters, SortOption } from "@/lib/types";
+import { VideoPlayer } from "@/components/VideoPlayer";
 
 function applySyllabusMatch(videos: VideoResult[], topics: string[]): VideoResult[] {
   if (topics.length === 0) return videos;
@@ -38,8 +39,10 @@ function CourseRadarPage() {
   const [syllabusTopics, setSyllabusTopics] = useState<string[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [searchResult, setSearchResult] = useState<SearchResult | null>(null);
   const [videos, setVideos] = useState<VideoResult[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [selectedVideo, setSelectedVideo] = useState<{id: string; title: string} | null>(null);
 
   const handleSearch = useCallback(async () => {
     if (!query.trim()) return;
@@ -47,7 +50,8 @@ function CourseRadarPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const result = await searchYouTube({ data: { query: query.trim(), language } });
+      const result = await searchYouTubeVideosFn({ data: { query: query.trim(), language } });
+      setSearchResult(result);
       // Apply syllabus matching if topics exist
       const videosWithMatch = syllabusTopics.length > 0
         ? applySyllabusMatch(result.videos, syllabusTopics)
@@ -174,7 +178,7 @@ function CourseRadarPage() {
                     setHasSearched(true);
                     setIsLoading(true);
                     setError(null);
-                    searchYouTube({ data: { query: suggestion, language } })
+                    searchYouTubeVideosFn({ data: { query: suggestion, language } })
                       .then((result) => {
                         const vids = syllabusTopics.length > 0
                           ? applySyllabusMatch(result.videos, syllabusTopics)
@@ -212,9 +216,10 @@ function CourseRadarPage() {
                 </div>
               )}
 
+
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm text-muted-foreground">
-                  <span className="font-semibold text-foreground">{rankedVideos.length}</span> courses ranked
+                  <span className="font-semibold text-foreground">{rankedVideos.length}</span> of {searchResult?.totalCount?.toLocaleString() || 'N/A'} videos ranked
                   {hasSyllabus && (
                     <span className="text-primary ml-1">• syllabus matching active</span>
                   )}
@@ -235,12 +240,13 @@ function CourseRadarPage() {
               ) : rankedVideos.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                   {rankedVideos.map((video, i) => (
-                    <VideoCard
+                      <VideoCard
                       key={video.id}
                       video={video}
                       rank={i + 1}
                       isBookmarked={bookmarkedIds.has(video.id)}
                       onToggleBookmark={toggleBookmark}
+                      onPlay={(id) => setSelectedVideo({id, title: video.title})}
                       showSyllabusMatch={hasSyllabus}
                     />
                   ))}
@@ -263,6 +269,17 @@ function CourseRadarPage() {
         onClose={() => setShowComparison(false)}
         onRemove={toggleBookmark}
       />
+      {selectedVideo && (
+        <VideoPlayer 
+          videoId={selectedVideo.id}
+          title={selectedVideo.title}
+          rankedVideos={rankedVideos}
+          onClose={() => setSelectedVideo(null)}
+          onSwitchVideo={(newId) => {
+            setSelectedVideo({id: newId, title: rankedVideos.find(v => v.id === newId)?.title || ''});
+          }}
+        />
+      )}
     </div>
   );
 }
