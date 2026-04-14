@@ -219,7 +219,7 @@ function CourseRadarPage() {
 
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm text-muted-foreground">
-                  <span className="font-semibold text-foreground">{rankedVideos.length}</span> of {searchResult?.totalCount?.toLocaleString() || 'N/A'} videos ranked
+                  <span className="font-semibold text-foreground">{rankedVideos.length}</span> videos found
                   {hasSyllabus && (
                     <span className="text-primary ml-1">• syllabus matching active</span>
                   )}

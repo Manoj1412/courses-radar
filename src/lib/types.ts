@@ -23,7 +23,7 @@ export interface VideoResult {
 export interface SearchResult {
   videos: VideoResult[];
   totalCount: number;
-  error?: string | null;
+  error: string | null;
 }
 
 export interface Filters {
@@ -33,3 +33,11 @@ export interface Filters {
 export type SortOption = "likes" | "popularity" | "positive-comments" | "recent";
 
 export const LANGUAGES = ["All", "English", "Hindi", "Telugu"];
+
+export type Emotion = "happy" | "sad" | "angry" | "surprised" | "fearful" | "disgusted" | "neutral";
+
+export interface FaceDetection {
+  name: string;
+  emotion: Emotion;
+  confidence: number;
+}
