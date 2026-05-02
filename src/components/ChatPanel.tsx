@@ -16,11 +16,11 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useServerFn } from '@tanstack/react-start';
 import {
   generateVideoSummary,
   generateQuizQuestions,
   generateQuizFeedback,
+  generateStudyRecommendation,
 } from '@/lib/gemini.functions';
 import { useQuizTracking } from '@/hooks/useQuizTracking';
 import type { QuizQuestion, QuizAttempt } from '@/lib/types';
@@ -73,13 +73,7 @@ export function ChatPanel({
   const loadSummary = async () => {
     setLoadingSummary(true);
     try {
-      const generateSummaryFn = useServerFn(generateVideoSummary);
-      const result = await generateSummaryFn({
-        data: {
-          videoTitle,
-          videoDescription,
-        },
-      });
+      const result = await generateVideoSummary(videoTitle, videoDescription);
       setSummary(result);
     } catch (error) {
       console.error('Error loading summary:', error);
@@ -101,14 +95,11 @@ export function ChatPanel({
     setQuizFeedback(null);
 
     try {
-      const generateQuizFn = useServerFn(generateQuizQuestions);
-      const result = await generateQuizFn({
-        data: {
-          videoTitle,
-          videoDescription,
-          numQuestions: 5,
-        },
-      });
+      const result = await generateQuizQuestions(
+        videoTitle,
+        videoDescription,
+        5
+      );
       setQuizQuestions(result.questions || []);
     } catch (error) {
       console.error('Error loading quiz:', error);
@@ -133,15 +124,12 @@ export function ChatPanel({
 
   const submitQuiz = async () => {
     try {
-      const generateFeedbackFn = useServerFn(generateQuizFeedback);
-      const feedback = await generateFeedbackFn({
-        data: {
-          videoTitle,
-          userAnswers,
-          correctAnswers: quizQuestions.map((q) => q.correctAnswer),
-          questions: quizQuestions,
-        },
-      });
+      const feedback = await generateQuizFeedback(
+        videoTitle,
+        userAnswers,
+        quizQuestions.map((q) => q.correctAnswer),
+        quizQuestions
+      );
 
       setQuizFeedback(feedback);
       setQuizComplete(true);
@@ -424,7 +412,7 @@ export function ChatPanel({
                   </h3>
 
                   <div className="space-y-2">
-                    {quizQuestions[currentQuestion].options.map((option, i) => (
+                    {quizQuestions[currentQuestion].options.map((option: string, i: number) => (
                       <button
                         key={i}
                         onClick={() => handleAnswerSelect(i)}

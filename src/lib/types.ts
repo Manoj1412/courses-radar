@@ -63,3 +63,27 @@ export interface ChatMessage {
   content: string;
   timestamp: number;
 }
+
+// Types from gemini.functions.ts
+export interface SummaryResponse {
+  title: string;
+  summary: string;
+  keyPoints: string[];
+}
+
+export interface QuizQuestion {
+  question: string;
+  options: string[];
+  correctAnswer: number;
+  explanation: string;
+}
+
+export interface QuizResponse {
+  questions: QuizQuestion[];
+}
+
+export interface FeedbackResponse {
+  feedback: string;
+  score: number;
+  incorrectAnswers: number[];
+}
