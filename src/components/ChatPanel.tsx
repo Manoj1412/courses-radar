@@ -80,10 +80,7 @@ export function ChatPanel({
   const loadSummary = async () => {
     setLoadingSummary(true);
     try {
-      const result = await generateSummary({
-        videoTitle,
-        videoDescription,
-      });
+      const result = await generateSummary({ data: { videoTitle, videoDescription } });
       setSummary(result);
     } catch (error) {
       console.error('Error loading summary:', error);
@@ -105,11 +102,7 @@ export function ChatPanel({
     setQuizFeedback(null);
 
     try {
-      const result = await generateQuiz({
-        videoTitle,
-        videoDescription,
-        numQuestions: 5,
-      });
+      const result = await generateQuiz({ data: { videoTitle, videoDescription, numQuestions: 5 } });
       setQuizQuestions(result.questions || []);
     } catch (error) {
       console.error('Error loading quiz:', error);
@@ -134,11 +127,13 @@ export function ChatPanel({
 
   const submitQuiz = async () => {
     try {
-      const feedback = await generateFeedback({
-        videoTitle,
-        userAnswers,
-        correctAnswers: quizQuestions.map((q) => q.correctAnswer),
-        questions: quizQuestions,
+      const feedback = await generateFeedback({ 
+        data: { 
+          videoTitle,
+          userAnswers,
+          correctAnswers: quizQuestions.map((q) => q.correctAnswer),
+          questions: quizQuestions,
+        }
       });
 
       setQuizFeedback(feedback);
