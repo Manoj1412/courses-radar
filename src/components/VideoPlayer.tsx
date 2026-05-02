@@ -157,46 +157,46 @@ export function VideoPlayer({ videoId, title, description = '', rankedVideos, on
           <div className="flex-1 flex flex-col lg:flex-row overflow-hidden gap-0">
             {/* Player */}
             <div ref={playerWrapperRef} className="flex-1 relative bg-black rounded-lg overflow-hidden m-4">
-            <iframe
-              src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
-              className="w-full h-full rounded-lg"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
-            <AnimatePresence>
-              {(isEmotionBad && badEmotion) || lowConfidenceAlert ? (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 20 }}
-                  className="absolute inset-0 bg-linear-to-t from-black/80 to-transparent flex flex-col justify-end p-6 gap-4 z-50"
-                >
-                  {lowConfidenceAlert ? (
-                    <>
-                      <div className="flex items-center gap-3 text-orange-400 bg-black/50 p-4 rounded-lg">
-                        <AlertCircle className="h-6 w-6 shrink-0" />
-                        <span className="text-lg font-semibold">
-                          Confused or bored?
-                        </span>
-                      </div>
-                      <div className="flex gap-3">
-                        <Button onClick={() => setLowConfidenceAlert(false)} size="lg" variant="secondary" className="flex items-center gap-2">
-                          <AlertCircle className="h-4 w-4" />
-                          Continue Watching
-                        </Button>
-                        <Button variant="default" onClick={handleSwitch} size="lg" className="flex items-center gap-2">
-                          <SwitchCamera className="h-4 w-4" />
-                          Try Another Video
-                        </Button>
-                      </div>
-                    </>
-                  ) : isEmotionBad && badEmotion ? (
-                    <>
-                      <div className="flex items-center gap-3 text-yellow-400 bg-black/50 p-4 rounded-lg">
-                        <AlertCircle className="h-6 w-6 shrink-0" />
-                        <span className="text-lg font-semibold">
-                          You look {badEmotion} {EMOTION_EMOJIS[badEmotion]} - want to try another video?
-                        </span>
+              <iframe
+                src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
+                className="w-full h-full rounded-lg"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+              <AnimatePresence>
+                {(isEmotionBad && badEmotion) || lowConfidenceAlert ? (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    className="absolute inset-0 bg-linear-to-t from-black/80 to-transparent flex flex-col justify-end p-6 gap-4 z-50"
+                  >
+                    {lowConfidenceAlert ? (
+                      <>
+                        <div className="flex items-center gap-3 text-orange-400 bg-black/50 p-4 rounded-lg">
+                          <AlertCircle className="h-6 w-6 shrink-0" />
+                          <span className="text-lg font-semibold">
+                            Confused or bored?
+                          </span>
+                        </div>
+                        <div className="flex gap-3">
+                          <Button onClick={() => setLowConfidenceAlert(false)} size="lg" variant="secondary" className="flex items-center gap-2">
+                            <AlertCircle className="h-4 w-4" />
+                            Continue Watching
+                          </Button>
+                          <Button variant="default" onClick={handleSwitch} size="lg" className="flex items-center gap-2">
+                            <SwitchCamera className="h-4 w-4" />
+                            Try Another Video
+                          </Button>
+                        </div>
+                      </>
+                    ) : isEmotionBad && badEmotion ? (
+                      <>
+                        <div className="flex items-center gap-3 text-yellow-400 bg-black/50 p-4 rounded-lg">
+                          <AlertCircle className="h-6 w-6 shrink-0" />
+                          <span className="text-lg font-semibold">
+                            You look {badEmotion} {EMOTION_EMOJIS[badEmotion]} - want to try another video?
+                          </span>
                       </div>
                       <div className="flex gap-3">
                         <Button onClick={handleRepeat} size="lg" variant="secondary" className="flex items-center gap-2">
@@ -209,74 +209,75 @@ export function VideoPlayer({ videoId, title, description = '', rankedVideos, on
                         </Button>
                       </div>
                     </>
+                      ) : null}
+                    </motion.div>
                   ) : null}
-                </motion.div>
-              ) : null}
-            </AnimatePresence>
-          </div>
+                </AnimatePresence>
+            </div>
 
             {/* Webcam & Emotion Panel */}
             <div className="lg:w-72 flex flex-col gap-4 px-4 pb-4">
-            {/* Emotion Monitor */}
-            <div className="glass-card p-4 rounded-lg">
+              {/* Emotion Monitor */}
+              <div className="glass-card p-4 rounded-lg">
               <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground mb-3">
                 <Webcam className="h-4 w-4" />
                 Live Emotion Monitor {emotionDetector.modelsLoaded ? "✅" : "⏳"}
               </div>
-              <div className="relative bg-black rounded-lg overflow-hidden aspect-video mb-3">
-                <video
-                  ref={emotionDetector.videoRef}
-                  className="w-full h-full object-cover"
-                  autoPlay muted playsInline
-                />
-                <canvas
-                  ref={emotionDetector.canvasRef}
-                  className="absolute inset-0 w-full h-full pointer-events-none"
-                />
-                {emotionDetector.error && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/70 text-destructive text-xs p-2 text-center">
-                    {emotionDetector.error}
-                  </div>
-                )}
-                {!emotionDetector.streaming && !emotionDetector.error && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-muted-foreground text-xs">
-                    Starting camera...
-                  </div>
-                )}
-              </div>
-              
-              {/* Detection Info */}
-              <div className="space-y-2 text-xs">
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Status: {emotionDetector.streaming ? "🟢 Live" : "🟡 Starting"}</span>
-                  <span>Faces: {emotionDetector.detections.length}</span>
+                <div className="relative bg-black rounded-lg overflow-hidden aspect-video mb-3">
+                  <video
+                    ref={emotionDetector.videoRef}
+                    className="w-full h-full object-cover"
+                    autoPlay muted playsInline
+                  />
+                  <canvas
+                    ref={emotionDetector.canvasRef}
+                    className="absolute inset-0 w-full h-full pointer-events-none"
+                  />
+                  {emotionDetector.error && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/70 text-destructive text-xs p-2 text-center">
+                      {emotionDetector.error}
+                    </div>
+                  )}
+                  {!emotionDetector.streaming && !emotionDetector.error && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-muted-foreground text-xs">
+                      Starting camera...
+                    </div>
+                  )}
                 </div>
                 
-                {emotionDetector.detections.length > 0 ? (
-                  emotionDetector.detections.map((det, i) => (
-                    <div key={i} className="bg-secondary/60 rounded p-2 space-y-1">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium">{det.name}</span>
-                        <span className="text-lg">{EMOTION_EMOJIS[det.emotion]}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
-                          <div 
-                            className="h-full rounded-full transition-all" 
-                            style={{ 
-                              width: `${det.confidence * 100}%`,
-                              backgroundColor: EMOTION_COLORS[det.emotion]
-                            }} 
-                          />
+                {/* Detection Info */}
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Status: {emotionDetector.streaming ? "🟢 Live" : "🟡 Starting"}</span>
+                    <span>Faces: {emotionDetector.detections.length}</span>
+                  </div>
+                  
+                  {emotionDetector.detections.length > 0 ? (
+                    emotionDetector.detections.map((det, i) => (
+                      <div key={i} className="bg-secondary/60 rounded p-2 space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">{det.name}</span>
+                          <span className="text-lg">{EMOTION_EMOJIS[det.emotion]}</span>
                         </div>
-                        <span className="w-8 text-right">{Math.round(det.confidence * 100)}%</span>
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                            <div 
+                              className="h-full rounded-full transition-all" 
+                              style={{ 
+                                width: `${det.confidence * 100}%`,
+                                backgroundColor: EMOTION_COLORS[det.emotion]
+                              }} 
+                            />
+                          </div>
+                          <span className="w-8 text-right">{Math.round(det.confidence * 100)}%</span>
+                        </div>
+                        <div className="text-xs text-muted-foreground capitalize">{det.emotion}</div>
                       </div>
-                      <div className="text-xs text-muted-foreground capitalize">{det.emotion}</div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-muted-foreground italic text-center py-2">Searching for face...</div>
-                )}
+                    ))
+                  ) : (
+                    <div className="text-muted-foreground italic text-center py-2">Searching for face...</div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
