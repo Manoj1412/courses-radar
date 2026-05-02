@@ -153,8 +153,8 @@ export function VideoPlayer({ videoId, title, description = '', rankedVideos, on
             </div>
           </div>
         </DialogHeader>
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex-1 flex flex-col lg:flex-row overflow-hidden gap-0">
+        <div className="flex-1 flex flex-row overflow-hidden gap-0">
+          <div className="flex-1 flex flex-col overflow-hidden">
             {/* Player */}
             <div ref={playerWrapperRef} className="flex-1 relative bg-black rounded-lg overflow-hidden m-4">
               <iframe
@@ -216,7 +216,7 @@ export function VideoPlayer({ videoId, title, description = '', rankedVideos, on
             </div>
 
             {/* Webcam & Emotion Panel */}
-            <div className="lg:w-72 flex flex-col gap-4 px-4 pb-4">
+            <div className="hidden lg:flex w-72 flex-col gap-4 px-4 pb-4">
               {/* Emotion Monitor */}
               <div className="glass-card p-4 rounded-lg">
               <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground mb-3">
@@ -282,9 +282,9 @@ export function VideoPlayer({ videoId, title, description = '', rankedVideos, on
             </div>
           </div>
 
-          {/* Chat Panel */}
+          {/* Chat Panel on Right */}
           {showChatPanel && (
-            <div className="lg:w-96 border-t border-l border-border max-h-96 lg:max-h-none overflow-hidden">
+            <div className="w-96 border-l border-border overflow-hidden flex flex-col">
               <ChatPanel
                 videoId={videoId}
                 videoTitle={title}
