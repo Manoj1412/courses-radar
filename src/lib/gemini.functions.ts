@@ -281,10 +281,7 @@ export async function generateVideoSummary(
   videoTitle: string,
   videoDescription: string
 ): Promise<SummaryResponse> {
-  const result = await generateVideoSummaryFn({
-    videoTitle,
-    videoDescription,
-  });
+  const result = await generateVideoSummaryFn({ data: { videoTitle, videoDescription } });
   return result;
 }
 
@@ -293,11 +290,7 @@ export async function generateQuizQuestions(
   videoDescription: string,
   numQuestions: number = 5
 ): Promise<QuizResponse> {
-  const result = await generateQuizQuestionsFn({
-    videoTitle,
-    videoDescription,
-    numQuestions,
-  });
+  const result = await generateQuizQuestionsFn({ data: { videoTitle, videoDescription, numQuestions } });
   return result;
 }
 
@@ -307,12 +300,7 @@ export async function generateQuizFeedback(
   correctAnswers: number[],
   questions: QuizQuestion[]
 ): Promise<FeedbackResponse> {
-  const result = await generateQuizFeedbackFn({
-    videoTitle,
-    userAnswers,
-    correctAnswers,
-    questions,
-  });
+  const result = await generateQuizFeedbackFn({ data: { videoTitle, userAnswers, correctAnswers, questions } });
   return result;
 }
 
@@ -321,10 +309,6 @@ export async function generateStudyRecommendation(
   quizScore: number,
   totalQuestions: number
 ): Promise<{ recommendation: string }> {
-  const result = await generateStudyRecommendationFn({
-    videoTitle,
-    quizScore,
-    totalQuestions,
-  });
+  const result = await generateStudyRecommendationFn({ data: { videoTitle, quizScore, totalQuestions } });
   return result;
 }
