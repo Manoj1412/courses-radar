@@ -17,11 +17,12 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  generateVideoSummary,
-  generateQuizQuestions,
-  generateQuizFeedback,
-  generateStudyRecommendation,
+  generateVideoSummaryFn,
+  generateQuizQuestionsFn,
+  generateQuizFeedbackFn,
+  generateStudyRecommendationFn,
 } from '@/lib/gemini.functions';
+import { useServerFn } from '@tanstack/react-start';
 import { useQuizTracking } from '@/hooks/useQuizTracking';
 import type { QuizQuestion, QuizAttempt } from '@/lib/types';
 
@@ -41,6 +42,12 @@ export function ChatPanel({
   videoDescription,
   emotionData,
 }: ChatPanelProps) {
+  // Server functions
+  const generateSummary = useServerFn(generateVideoSummaryFn);
+  const generateQuiz = useServerFn(generateQuizQuestionsFn);
+  const generateFeedback = useServerFn(generateQuizFeedbackFn);
+
+  // State
   const [activeTab, setActiveTab] = useState('summary');
   const [summary, setSummary] = useState<any | null>(null);
   const [loadingSummary, setLoadingSummary] = useState(false);
@@ -73,7 +80,10 @@ export function ChatPanel({
   const loadSummary = async () => {
     setLoadingSummary(true);
     try {
-      const result = await generateVideoSummary(videoTitle, videoDescription);
+      const result = await generateSummary({
+        videoTitle,
+        videoDescription,
+      });
       setSummary(result);
     } catch (error) {
       console.error('Error loading summary:', error);
@@ -95,11 +105,11 @@ export function ChatPanel({
     setQuizFeedback(null);
 
     try {
-      const result = await generateQuizQuestions(
+      const result = await generateQuiz({
         videoTitle,
         videoDescription,
-        5
-      );
+        numQuestions: 5,
+      });
       setQuizQuestions(result.questions || []);
     } catch (error) {
       console.error('Error loading quiz:', error);
@@ -124,12 +134,12 @@ export function ChatPanel({
 
   const submitQuiz = async () => {
     try {
-      const feedback = await generateQuizFeedback(
+      const feedback = await generateFeedback({
         videoTitle,
         userAnswers,
-        quizQuestions.map((q) => q.correctAnswer),
-        quizQuestions
-      );
+        correctAnswers: quizQuestions.map((q) => q.correctAnswer),
+        questions: quizQuestions,
+      });
 
       setQuizFeedback(feedback);
       setQuizComplete(true);
