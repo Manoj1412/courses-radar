@@ -42,7 +42,7 @@ function CourseRadarPage() {
   const [searchResult, setSearchResult] = useState<SearchResult | null>(null);
   const [videos, setVideos] = useState<VideoResult[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [selectedVideo, setSelectedVideo] = useState<{id: string; title: string} | null>(null);
+  const [selectedVideo, setSelectedVideo] = useState<{id: string; title: string; description: string} | null>(null);
 
   const handleSearch = useCallback(async () => {
     if (!query.trim()) return;
@@ -246,7 +246,7 @@ function CourseRadarPage() {
                       rank={i + 1}
                       isBookmarked={bookmarkedIds.has(video.id)}
                       onToggleBookmark={toggleBookmark}
-                      onPlay={(id) => setSelectedVideo({id, title: video.title})}
+                      onPlay={(id) => setSelectedVideo({id, title: video.title, description: video.description})}
                       showSyllabusMatch={hasSyllabus}
                     />
                   ))}
@@ -273,10 +273,12 @@ function CourseRadarPage() {
         <VideoPlayer 
           videoId={selectedVideo.id}
           title={selectedVideo.title}
+          description={selectedVideo.description}
           rankedVideos={rankedVideos}
           onClose={() => setSelectedVideo(null)}
           onSwitchVideo={(newId) => {
-            setSelectedVideo({id: newId, title: rankedVideos.find(v => v.id === newId)?.title || ''});
+            const video = rankedVideos.find(v => v.id === newId);
+            setSelectedVideo({id: newId, title: video?.title || '', description: video?.description || ''});
           }}
         />
       )}

@@ -3,21 +3,23 @@ import { useEmotionDetector } from '@/hooks/useEmotionDetector';
 import { getRelatedVideosFn } from '@/lib/youtube.functions';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { X, SwitchCamera, AlertCircle, Video, Webcam, Maximize2, Minimize2 } from 'lucide-react';
+import { X, SwitchCamera, AlertCircle, Video, Webcam, Maximize2, Minimize2, MessageSquare } from 'lucide-react';
 import { VideoResult, Emotion } from '@/lib/types';
 import { EMOTION_EMOJIS, EMOTION_COLORS } from '@/lib/constants';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useServerFn } from '@tanstack/react-start';
+import { ChatPanel } from './ChatPanel';
 
 interface VideoPlayerProps {
   videoId: string;
   title: string;
+  description?: string;
   rankedVideos?: VideoResult[];
   onClose: () => void;
   onSwitchVideo?: (newId: string) => void;
 }
 
-export function VideoPlayer({ videoId, title, rankedVideos, onClose, onSwitchVideo }: VideoPlayerProps) {
+export function VideoPlayer({ videoId, title, description = '', rankedVideos, onClose, onSwitchVideo }: VideoPlayerProps) {
   const emotionDetector = useEmotionDetector();
   const getRelatedVideos = useServerFn(getRelatedVideosFn);
   const [relatedVideos, setRelatedVideos] = useState<VideoResult[]>([]);
@@ -27,6 +29,7 @@ export function VideoPlayer({ videoId, title, rankedVideos, onClose, onSwitchVid
   const [isEmotionBad, setIsEmotionBad] = useState(false);
   const [badEmotion, setBadEmotion] = useState<Emotion | null>(null);
   const [lowConfidenceAlert, setLowConfidenceAlert] = useState(false);
+  const [showChatPanel, setShowChatPanel] = useState(false);
   const playerWrapperRef = useRef<HTMLDivElement>(null);
 
   // Auto start emotion detection on mount
@@ -133,6 +136,14 @@ export function VideoPlayer({ videoId, title, rankedVideos, onClose, onSwitchVid
             <Video className="h-5 w-5" />
             <DialogTitle className="text-lg font-bold line-clamp-1">{title}</DialogTitle>
             <div className="ml-auto flex items-center gap-2">
+              <Button 
+                variant={showChatPanel ? "default" : "ghost"} 
+                size="icon" 
+                onClick={() => setShowChatPanel(!showChatPanel)}
+                title="AI Learning Assistant"
+              >
+                <MessageSquare className="h-5 w-5" />
+              </Button>
               <Button variant="ghost" size="icon" onClick={toggleFullscreen}>
                 {isFullscreen ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
               </Button>
@@ -142,9 +153,10 @@ export function VideoPlayer({ videoId, title, rankedVideos, onClose, onSwitchVid
             </div>
           </div>
         </DialogHeader>
-        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden gap-4 p-4">
-          {/* Player */}
-            <div ref={playerWrapperRef} className="flex-1 relative bg-black rounded-lg overflow-hidden">
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-1 flex flex-col lg:flex-row overflow-hidden gap-0">
+            {/* Player */}
+            <div ref={playerWrapperRef} className="flex-1 relative bg-black rounded-lg overflow-hidden m-4">
             <iframe
               src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
               className="w-full h-full rounded-lg"
@@ -203,8 +215,8 @@ export function VideoPlayer({ videoId, title, rankedVideos, onClose, onSwitchVid
             </AnimatePresence>
           </div>
 
-          {/* Webcam & Emotion Panel */}
-          <div className="lg:w-72 flex flex-col gap-4">
+            {/* Webcam & Emotion Panel */}
+            <div className="lg:w-72 flex flex-col gap-4 px-4 pb-4">
             {/* Emotion Monitor */}
             <div className="glass-card p-4 rounded-lg">
               <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground mb-3">
@@ -268,6 +280,23 @@ export function VideoPlayer({ videoId, title, rankedVideos, onClose, onSwitchVid
               </div>
             </div>
           </div>
+
+          {/* Chat Panel */}
+          {showChatPanel && (
+            <div className="lg:w-96 border-t border-l border-border max-h-96 lg:max-h-none overflow-hidden">
+              <ChatPanel
+                videoId={videoId}
+                videoTitle={title}
+                videoDescription={description}
+                emotionData={{
+                  avgConfidence: emotionDetector.detections.length > 0
+                    ? emotionDetector.detections[0].confidence
+                    : 0,
+                  primaryEmotions: emotionDetector.detections.map((d) => d.emotion),
+                }}
+              />
+            </div>
+          )}
         </div>
 
         {/* Related Videos Modal */}

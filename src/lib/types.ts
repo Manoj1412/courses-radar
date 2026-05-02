@@ -41,3 +41,25 @@ export interface FaceDetection {
   emotion: Emotion;
   confidence: number;
 }
+
+export interface QuizAttempt {
+  id: string;
+  videoId: string;
+  videoTitle: string;
+  timestamp: number;
+  userAnswers: number[];
+  score: number;
+  totalQuestions: number;
+  feedback: string;
+  emotionData?: {
+    avgConfidence: number;
+    primaryEmotions: Emotion[];
+  };
+}
+
+export interface ChatMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: number;
+}
