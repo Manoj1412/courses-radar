@@ -55,6 +55,10 @@ async def get_status_checks():
 # Include the router in the main app
 app.include_router(api_router)
 
+# AI endpoints (summarize / quiz / chat / feedback) powered by Emergent LLM key
+from ai_routes import router as ai_router  # noqa: E402
+app.include_router(ai_router)
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,

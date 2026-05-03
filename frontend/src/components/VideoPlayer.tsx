@@ -326,8 +326,12 @@ export function VideoPlayer({
   };
 
   return (
-    <Dialog open={true} onOpenChange={handleClosePlayer}>
-      <DialogContent className="max-w-5xl max-h-[90vh] p-0 flex flex-col">
+    <Dialog open={true} onOpenChange={(o) => { if (!o) handleClosePlayer(); }}>
+      <DialogContent
+        className="max-w-5xl max-h-[90vh] p-0 flex flex-col"
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
         <DialogHeader className="p-4 border-b">
           <div className="flex items-center gap-2">
             <Video className="h-5 w-5" />

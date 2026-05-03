@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Bot,
@@ -20,11 +19,11 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  summarizeVideoFn,
-  generateQuizFn,
-  evaluateQuizFn,
-  chatWithAIFn,
-} from "@/lib/gemini.functions";
+  summarizeVideo,
+  generateQuiz,
+  evaluateQuiz,
+  chatWithAI,
+} from "@/lib/ai.client";
 
 interface Props {
   videoId: string;
@@ -49,14 +48,12 @@ export function AIChatbotPanel({ videoId, title, open, onClose }: Props) {
   const [tab, setTab] = useState<"chat" | "summary" | "quiz">("chat");
 
   // Chat
-  const chat = useServerFn(chatWithAIFn);
   const [chatMsgs, setChatMsgs] = useState<ChatMsg[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   // Summary
-  const summarize = useServerFn(summarizeVideoFn);
   const [summary, setSummary] = useState<{
     overview: string;
     keyPoints: string[];
@@ -66,8 +63,6 @@ export function AIChatbotPanel({ videoId, title, open, onClose }: Props) {
   const [summaryError, setSummaryError] = useState<string | null>(null);
 
   // Quiz
-  const genQuiz = useServerFn(generateQuizFn);
-  const evalQuiz = useServerFn(evaluateQuizFn);
   const [quizQs, setQuizQs] = useState<QuizQ[]>([]);
   const [quizAnswers, setQuizAnswers] = useState<number[]>([]);
   const [quizResult, setQuizResult] = useState<any | null>(null);
@@ -86,12 +81,10 @@ export function AIChatbotPanel({ videoId, title, open, onClose }: Props) {
     setChatMsgs(newHistory);
     setChatLoading(true);
     try {
-      const res = await chat({
-        data: {
-          title,
-          message: msg,
-          history: chatMsgs,
-        },
+      const res = await chatWithAI({
+        title,
+        message: msg,
+        history: chatMsgs,
       });
       if (res.error) {
         setChatMsgs([
@@ -112,14 +105,14 @@ export function AIChatbotPanel({ videoId, title, open, onClose }: Props) {
     } finally {
       setChatLoading(false);
     }
-  }, [chat, chatInput, chatLoading, chatMsgs, title]);
+  }, [chatInput, chatLoading, chatMsgs, title]);
 
   const loadSummary = useCallback(async () => {
     if (summary || summaryLoading) return;
     setSummaryLoading(true);
     setSummaryError(null);
     try {
-      const res = await summarize({ data: { title } });
+      const res = await summarizeVideo({ title });
       if (res.error) setSummaryError(res.error);
       else setSummary(res);
     } catch (e: any) {
@@ -127,7 +120,7 @@ export function AIChatbotPanel({ videoId, title, open, onClose }: Props) {
     } finally {
       setSummaryLoading(false);
     }
-  }, [summary, summaryLoading, summarize, title]);
+  }, [summary, summaryLoading, title]);
 
   const loadQuiz = useCallback(async () => {
     setQuizLoading(true);
@@ -136,7 +129,7 @@ export function AIChatbotPanel({ videoId, title, open, onClose }: Props) {
     setQuizQs([]);
     setQuizAnswers([]);
     try {
-      const res = await genQuiz({ data: { title, count: 5 } });
+      const res = await generateQuiz({ title, count: 5 });
       if (res.error) setQuizError(res.error);
       else {
         setQuizQs(res.questions);
@@ -147,7 +140,7 @@ export function AIChatbotPanel({ videoId, title, open, onClose }: Props) {
     } finally {
       setQuizLoading(false);
     }
-  }, [genQuiz, title]);
+  }, [title]);
 
   const submitQuiz = useCallback(async () => {
     if (quizAnswers.some((a) => a < 0)) {
@@ -157,12 +150,10 @@ export function AIChatbotPanel({ videoId, title, open, onClose }: Props) {
     setQuizError(null);
     setQuizLoading(true);
     try {
-      const res = await evalQuiz({
-        data: {
-          title,
-          questions: quizQs,
-          userAnswers: quizAnswers,
-        },
+      const res = await evaluateQuiz({
+        title,
+        questions: quizQs,
+        userAnswers: quizAnswers,
       });
       if (res.error) setQuizError(res.error);
       else setQuizResult(res);
@@ -171,7 +162,7 @@ export function AIChatbotPanel({ videoId, title, open, onClose }: Props) {
     } finally {
       setQuizLoading(false);
     }
-  }, [evalQuiz, quizQs, quizAnswers, title]);
+  }, [quizQs, quizAnswers, title]);
 
   const retakeQuiz = () => {
     setQuizResult(null);
@@ -194,7 +185,8 @@ export function AIChatbotPanel({ videoId, title, open, onClose }: Props) {
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: 40 }}
           transition={{ duration: 0.2 }}
-          className="fixed right-4 bottom-4 z-[10000] w-[400px] max-w-[95vw] h-[600px] max-h-[85vh] bg-background border rounded-xl shadow-2xl flex flex-col overflow-hidden"
+          className="fixed right-4 top-20 bottom-4 z-[10000] w-[400px] max-w-[95vw] max-h-[calc(100vh-6rem)] bg-background border rounded-xl shadow-2xl flex flex-col overflow-hidden"
+          data-testid="ai-chatbot-panel"
         >
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b bg-linear-to-r from-purple-600/10 to-blue-600/10">

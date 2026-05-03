@@ -1,6 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { motion } from "framer-motion";
 import { Radar, BookmarkCheck, Sparkles, AlertTriangle, Loader2 } from "lucide-react";
 import { SearchBar } from "@/components/SearchBar";
 import { VideoCard } from "@/components/VideoCard";
@@ -153,26 +152,22 @@ function CourseRadarPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
         {!hasSearched ? (
           /* Hero / Empty State */
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="flex flex-col items-center justify-center min-h-[60vh] text-center"
-          >
+          <div className="flex flex-col items-center justify-center min-h-[60vh] text-center" data-testid="hero-section">
             <div className="p-4 rounded-2xl bg-primary/10 mb-6">
               <Radar className="h-16 w-16 text-primary" />
             </div>
-            <h2 className="text-3xl sm:text-4xl font-display font-bold text-foreground mb-3">
+            <h2 className="text-3xl sm:text-4xl font-display font-bold text-foreground mb-3" data-testid="hero-title">
               Find the Best Courses
             </h2>
-            <p className="text-muted-foreground max-w-md mb-8 text-sm sm:text-base">
+            <p className="text-muted-foreground max-w-md mb-8 text-sm sm:text-base" data-testid="hero-description">
               Search any topic and we'll rank YouTube courses by like ratio, comment sentiment,
               recency, and syllabus match — not just views.
             </p>
-            <div className="flex flex-wrap gap-2 justify-center">
+            <div className="flex flex-wrap gap-2 justify-center" data-testid="hero-suggestions">
               {["Java full course", "React tutorial", "Python DSA", "Machine Learning"].map((suggestion) => (
                 <button
                   key={suggestion}
+                  data-testid={`hero-suggestion-${suggestion.replace(/\s+/g, "-").toLowerCase()}`}
                   onClick={() => {
                     setQuery(suggestion);
                     setHasSearched(true);
@@ -196,7 +191,7 @@ function CourseRadarPage() {
                 </button>
               ))}
             </div>
-          </motion.div>
+          </div>
         ) : (
           /* Results */
           <div className="flex gap-6">
