@@ -18,9 +18,6 @@ import {
   Minimize2,
   Bot,
   Sparkles,
-  PauseCircle,
-  Eye,
-  EyeOff,
 } from "lucide-react";
 import { VideoResult, Emotion } from "@/lib/types";
 import { EMOTION_EMOJIS, EMOTION_COLORS } from "@/lib/constants";
@@ -59,8 +56,6 @@ function loadYouTubeAPI(): Promise<any> {
   return ytApiPromise;
 }
 
-const NO_FACE_PAUSE_MS = 2500; // auto-pause after 2.5s no face
-
 export function VideoPlayer({
   videoId,
   title,
@@ -78,20 +73,15 @@ export function VideoPlayer({
   const [chatOpen, setChatOpen] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
 
-  // Auto-pause state
-  const [autoPaused, setAutoPaused] = useState(false);
-  const [showPauseToast, setShowPauseToast] = useState(false);
-  const pauseToastTimerRef = useRef<number | null>(null);
-
   const playerWrapperRef = useRef<HTMLDivElement>(null);
   const playerContainerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<any>(null);
   const isPlayingRef = useRef(false);
-  const noFaceSinceRef = useRef<number | null>(null);
 
   // Aggregation refs (not state to avoid re-renders)
   const emotionCountsRef = useRef<Record<string, number>>({});
   const awayCountRef = useRef(0);
+  const wasFacePresentRef = useRef(true);
   const playedStartRef = useRef<number | null>(null);
   const playedTotalRef = useRef(0); // seconds
   const confidenceSumRef = useRef(0);
@@ -194,66 +184,33 @@ export function VideoPlayer({
     }
   }, [emotionDetector.shouldSuggestSwitch, lowConfidenceAlert]);
 
-  /* ---- Emotion aggregation + presence (auto-pause/resume) ---- */
+  /* ---- Emotion aggregation only (no auto-pause, video never interrupted) ---- */
   useEffect(() => {
     const id = setInterval(() => {
       const detections = emotionDetector.detections;
       const streaming = emotionDetector.streaming;
-      const now = Date.now();
 
       if (!streaming) return;
 
-      if (detections.length === 0) {
-        // No face
-        if (noFaceSinceRef.current === null) {
-          noFaceSinceRef.current = now;
-        } else if (
-          isPlayingRef.current &&
-          !autoPaused &&
-          now - noFaceSinceRef.current >= NO_FACE_PAUSE_MS
-        ) {
-          // Auto-pause
-          try {
-            playerRef.current?.pauseVideo?.();
-          } catch {}
-          setAutoPaused(true);
-          awayCountRef.current += 1;
-          setShowPauseToast(true);
-          if (pauseToastTimerRef.current)
-            clearTimeout(pauseToastTimerRef.current);
-        }
-      } else {
-        // Face present
-        if (autoPaused) {
-          // Auto-resume
-          try {
-            playerRef.current?.playVideo?.();
-          } catch {}
-          setAutoPaused(false);
-          setShowPauseToast(false);
-        } else if (showPauseToast) {
-          // clear toast after resume is confirmed by playing state
-          setShowPauseToast(false);
-        }
-        noFaceSinceRef.current = null;
+      const facePresent = detections.length > 0;
 
-        // Aggregate emotion samples ONLY while playing
-        if (isPlayingRef.current) {
-          const primary = detections[0];
-          emotionCountsRef.current[primary.emotion] =
-            (emotionCountsRef.current[primary.emotion] || 0) + 1;
-          confidenceSumRef.current += primary.confidence;
-          confidenceSamplesRef.current += 1;
-        }
+      // Count a "break taken" each time the face disappears (rising edge of absence)
+      if (!facePresent && wasFacePresentRef.current) {
+        awayCountRef.current += 1;
+      }
+      wasFacePresentRef.current = facePresent;
+
+      // Aggregate emotion samples ONLY while playing AND face visible
+      if (facePresent && isPlayingRef.current) {
+        const primary = detections[0];
+        emotionCountsRef.current[primary.emotion] =
+          (emotionCountsRef.current[primary.emotion] || 0) + 1;
+        confidenceSumRef.current += primary.confidence;
+        confidenceSamplesRef.current += 1;
       }
     }, 500);
     return () => clearInterval(id);
-  }, [
-    emotionDetector.detections,
-    emotionDetector.streaming,
-    autoPaused,
-    showPauseToast,
-  ]);
+  }, [emotionDetector.detections, emotionDetector.streaming]);
 
   const captureFinalStats = useCallback(() => {
     // If still playing, flush the running time
@@ -328,7 +285,7 @@ export function VideoPlayer({
   return (
     <Dialog open={true} onOpenChange={(o) => { if (!o) handleClosePlayer(); }}>
       <DialogContent
-        className="max-w-5xl max-h-[90vh] p-0 flex flex-col"
+        className="max-w-6xl max-h-[90vh] p-0 flex flex-col"
         onInteractOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
@@ -387,60 +344,9 @@ export function VideoPlayer({
               className="absolute inset-0 w-full h-full"
             />
 
-            {/* Auto-pause overlay */}
+            {/* Existing bad-emotion + low-confidence alerts ("Confused or bored?" stays) */}
             <AnimatePresence>
-              {autoPaused && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center gap-3 z-40 backdrop-blur-xs"
-                >
-                  <div className="rounded-full bg-orange-500/20 p-4">
-                    <EyeOff className="h-10 w-10 text-orange-400" />
-                  </div>
-                  <p className="text-white text-lg font-semibold">
-                    Video paused
-                  </p>
-                  <p className="text-white/70 text-sm">
-                    We lost sight of you. Come back to resume!
-                  </p>
-                  <Button
-                    onClick={() => {
-                      try {
-                        playerRef.current?.playVideo?.();
-                      } catch {}
-                      setAutoPaused(false);
-                    }}
-                    variant="secondary"
-                    size="sm"
-                    className="mt-1"
-                  >
-                    <Eye className="h-4 w-4 mr-1" />
-                    Resume anyway
-                  </Button>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Auto-resume toast */}
-            <AnimatePresence>
-              {showPauseToast && !autoPaused && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  className="absolute top-3 left-1/2 -translate-x-1/2 bg-green-500/90 text-white text-xs px-3 py-1.5 rounded-full z-40 flex items-center gap-1 shadow-lg"
-                >
-                  <Eye className="h-3 w-3" />
-                  Welcome back — resuming
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Existing bad-emotion + low-confidence alerts */}
-            <AnimatePresence>
-              {!autoPaused && ((isEmotionBad && badEmotion) || lowConfidenceAlert) ? (
+              {((isEmotionBad && badEmotion) || lowConfidenceAlert) ? (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -518,14 +424,14 @@ export function VideoPlayer({
           </div>
 
           {/* Webcam & Emotion Panel */}
-          <div className="lg:w-72 flex flex-col gap-4">
+          <div className="lg:w-96 flex flex-col gap-4">
             <div className="glass-card p-4 rounded-lg border">
               <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground mb-3">
                 <Webcam className="h-4 w-4" />
                 Live Emotion Monitor{" "}
                 {emotionDetector.modelsLoaded ? "✅" : "⏳"}
               </div>
-              <div className="relative bg-black rounded-lg overflow-hidden aspect-video mb-3">
+              <div className="relative bg-black rounded-lg overflow-hidden aspect-video mb-3 min-h-[220px]">
                 <video
                   ref={emotionDetector.videoRef}
                   className="w-full h-full object-cover"
@@ -590,9 +496,7 @@ export function VideoPlayer({
                   ))
                 ) : (
                   <div className="text-muted-foreground italic text-center py-2">
-                    {autoPaused
-                      ? "No face — video paused"
-                      : "Searching for face..."}
+                    No face detected — keep watching, we'll pick it up when you're back
                   </div>
                 )}
               </div>
