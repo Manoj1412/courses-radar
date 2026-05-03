@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, lazy, Suspense } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Radar, BookmarkCheck, Sparkles, AlertTriangle, Loader2 } from "lucide-react";
 import { SearchBar } from "@/components/SearchBar";
@@ -11,7 +11,13 @@ import { Button } from "@/components/ui/button";
 import { sortVideos, filterVideos } from "@/lib/ranking";
 import { searchYouTubeVideosFn } from "@/lib/youtube.functions";
 import type { VideoResult, SearchResult, Filters, SortOption } from "@/lib/types";
-import { VideoPlayer } from "@/components/VideoPlayer";
+
+// Lazy-load the heavy VideoPlayer (face-api + framer-motion + AI panel) so the
+// homepage becomes interactive within ~1s instead of 10s. It's only needed
+// after the user clicks "Watch with AI" on a video card.
+const VideoPlayer = lazy(() =>
+  import("@/components/VideoPlayer").then((m) => ({ default: m.VideoPlayer }))
+);
 
 function applySyllabusMatch(videos: VideoResult[], topics: string[]): VideoResult[] {
   if (topics.length === 0) return videos;
@@ -265,15 +271,17 @@ function CourseRadarPage() {
         onRemove={toggleBookmark}
       />
       {selectedVideo && (
-        <VideoPlayer 
-          videoId={selectedVideo.id}
-          title={selectedVideo.title}
-          rankedVideos={rankedVideos}
-          onClose={() => setSelectedVideo(null)}
-          onSwitchVideo={(newId) => {
-            setSelectedVideo({id: newId, title: rankedVideos.find(v => v.id === newId)?.title || ''});
-          }}
-        />
+        <Suspense fallback={null}>
+          <VideoPlayer 
+            videoId={selectedVideo.id}
+            title={selectedVideo.title}
+            rankedVideos={rankedVideos}
+            onClose={() => setSelectedVideo(null)}
+            onSwitchVideo={(newId) => {
+              setSelectedVideo({id: newId, title: rankedVideos.find(v => v.id === newId)?.title || ''});
+            }}
+          />
+        </Suspense>
       )}
     </div>
   );
