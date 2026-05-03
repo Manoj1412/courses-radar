@@ -16,7 +16,7 @@ import {
   Timer,
   EyeOff,
 } from "lucide-react";
-import { understandingFeedback } from "@/lib/ai.client";
+import { understandingFeedback } from "@/lib/aiApi";
 import { EMOTION_EMOJIS, EMOTION_COLORS } from "@/lib/constants";
 import type { Emotion } from "@/lib/types";
 

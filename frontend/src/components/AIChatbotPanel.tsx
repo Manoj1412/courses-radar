@@ -23,7 +23,7 @@ import {
   generateQuiz,
   evaluateQuiz,
   chatWithAI,
-} from "@/lib/ai.client";
+} from "@/lib/aiApi";
 
 interface Props {
   videoId: string;
