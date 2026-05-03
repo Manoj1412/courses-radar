@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Bot,
@@ -19,11 +20,11 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  summarizeVideo,
-  generateQuiz,
-  evaluateQuiz,
-  chatWithAI,
-} from "@/lib/aiApi";
+  summarizeVideoFn,
+  generateQuizFn,
+  evaluateQuizFn,
+  chatWithAIFn,
+} from "@/lib/gemini.functions";
 
 interface Props {
   videoId: string;
@@ -46,6 +47,12 @@ interface QuizQ {
 
 export function AIChatbotPanel({ videoId, title, open, onClose }: Props) {
   const [tab, setTab] = useState<"chat" | "summary" | "quiz">("chat");
+
+  // Server functions (run in TanStack Start backend; no Python needed)
+  const chat = useServerFn(chatWithAIFn);
+  const summarize = useServerFn(summarizeVideoFn);
+  const genQuiz = useServerFn(generateQuizFn);
+  const evalQuiz = useServerFn(evaluateQuizFn);
 
   // Chat
   const [chatMsgs, setChatMsgs] = useState<ChatMsg[]>([]);
@@ -81,18 +88,13 @@ export function AIChatbotPanel({ videoId, title, open, onClose }: Props) {
     setChatMsgs(newHistory);
     setChatLoading(true);
     try {
-      const res = await chatWithAI({
-        title,
-        message: msg,
-        history: chatMsgs,
+      const res = await chat({
+        data: { title, message: msg, history: chatMsgs },
       });
       if (res.error) {
         setChatMsgs([
           ...newHistory,
-          {
-            role: "model",
-            text: `⚠️ ${res.error}`,
-          },
+          { role: "model", text: `⚠️ ${res.error}` },
         ]);
       } else {
         setChatMsgs([...newHistory, { role: "model", text: res.reply }]);
@@ -105,14 +107,14 @@ export function AIChatbotPanel({ videoId, title, open, onClose }: Props) {
     } finally {
       setChatLoading(false);
     }
-  }, [chatInput, chatLoading, chatMsgs, title]);
+  }, [chat, chatInput, chatLoading, chatMsgs, title]);
 
   const loadSummary = useCallback(async () => {
     if (summary || summaryLoading) return;
     setSummaryLoading(true);
     setSummaryError(null);
     try {
-      const res = await summarizeVideo({ title });
+      const res = await summarize({ data: { title } });
       if (res.error) setSummaryError(res.error);
       else setSummary(res);
     } catch (e: any) {
@@ -120,7 +122,7 @@ export function AIChatbotPanel({ videoId, title, open, onClose }: Props) {
     } finally {
       setSummaryLoading(false);
     }
-  }, [summary, summaryLoading, title]);
+  }, [summary, summaryLoading, summarize, title]);
 
   const loadQuiz = useCallback(async () => {
     setQuizLoading(true);
@@ -129,7 +131,7 @@ export function AIChatbotPanel({ videoId, title, open, onClose }: Props) {
     setQuizQs([]);
     setQuizAnswers([]);
     try {
-      const res = await generateQuiz({ title, count: 5 });
+      const res = await genQuiz({ data: { title, count: 5 } });
       if (res.error) setQuizError(res.error);
       else {
         setQuizQs(res.questions);
@@ -140,7 +142,7 @@ export function AIChatbotPanel({ videoId, title, open, onClose }: Props) {
     } finally {
       setQuizLoading(false);
     }
-  }, [title]);
+  }, [genQuiz, title]);
 
   const submitQuiz = useCallback(async () => {
     if (quizAnswers.some((a) => a < 0)) {
@@ -150,10 +152,8 @@ export function AIChatbotPanel({ videoId, title, open, onClose }: Props) {
     setQuizError(null);
     setQuizLoading(true);
     try {
-      const res = await evaluateQuiz({
-        title,
-        questions: quizQs,
-        userAnswers: quizAnswers,
+      const res = await evalQuiz({
+        data: { title, questions: quizQs, userAnswers: quizAnswers },
       });
       if (res.error) setQuizError(res.error);
       else setQuizResult(res);
@@ -162,7 +162,7 @@ export function AIChatbotPanel({ videoId, title, open, onClose }: Props) {
     } finally {
       setQuizLoading(false);
     }
-  }, [quizQs, quizAnswers, title]);
+  }, [evalQuiz, quizQs, quizAnswers, title]);
 
   const retakeQuiz = () => {
     setQuizResult(null);

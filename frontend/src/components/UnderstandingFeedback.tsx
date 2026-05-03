@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Dialog,
@@ -16,7 +17,7 @@ import {
   Timer,
   EyeOff,
 } from "lucide-react";
-import { understandingFeedback } from "@/lib/aiApi";
+import { understandingFeedbackFn } from "@/lib/gemini.functions";
 import { EMOTION_EMOJIS, EMOTION_COLORS } from "@/lib/constants";
 import type { Emotion } from "@/lib/types";
 
@@ -35,6 +36,7 @@ interface Props {
 }
 
 export function UnderstandingFeedback({ open, onClose, title, stats }: Props) {
+  const getFeedback = useServerFn(understandingFeedbackFn);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<any | null>(null);
@@ -47,12 +49,14 @@ export function UnderstandingFeedback({ open, onClose, title, stats }: Props) {
       setLoading(true);
       setError(null);
       try {
-        const res = await understandingFeedback({
-          title,
-          emotionCounts: stats.emotionCounts,
-          totalSeconds: stats.totalSeconds,
-          awayCount: stats.awayCount,
-          avgConfidence: stats.avgConfidence,
+        const res = await getFeedback({
+          data: {
+            title,
+            emotionCounts: stats.emotionCounts,
+            totalSeconds: stats.totalSeconds,
+            awayCount: stats.awayCount,
+            avgConfidence: stats.avgConfidence,
+          },
         });
         if (cancelled) return;
         if (res.error) setError(res.error);
@@ -66,7 +70,7 @@ export function UnderstandingFeedback({ open, onClose, title, stats }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [open, title, stats, data]);
+  }, [open, title, stats, data, getFeedback]);
 
   const percentages: Record<string, number> = data?.percentages || {};
   const sortedEmotions = Object.entries(percentages).sort(
